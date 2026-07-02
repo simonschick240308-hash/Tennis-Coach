@@ -14,11 +14,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { logout } from "@/actions/logout";
+import { BrandMark } from "@/components/brand-mark";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/training", label: "Training" },
   { href: "/matches", label: "Matches" },
+  { href: "/drills", label: "Drills" },
   { href: "/profile", label: "Profil" },
   { href: "/coach", label: "Coach" },
 ];
@@ -60,8 +62,8 @@ export function NavBar({ userName }: { userName?: string | null }) {
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/dashboard" className="shrink-0 font-semibold">
-          🎾 Tennis-Coach
+        <Link href="/dashboard" className="shrink-0">
+          <BrandMark size="compact" />
         </Link>
 
         <NavLinks
@@ -95,7 +97,9 @@ export function NavBar({ userName }: { userName?: string | null }) {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <SheetHeader>
-                <SheetTitle>🎾 Tennis-Coach</SheetTitle>
+                <SheetTitle>
+                  <BrandMark size="compact" />
+                </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4">
                 {userName && (

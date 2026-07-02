@@ -106,3 +106,38 @@ model ChatMessage {
 
   @@index([conversationId, createdAt])
 }
+
+enum DrillCategory {
+  FOREHAND
+  BACKHAND
+  SERVE
+  RETURN
+  VOLLEY
+  APPROACH
+  FOOTWORK
+  TACTICS
+}
+
+enum DrillDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// Kuratierte Trainings-Bibliothek (Referenzinhalte, nicht nutzerspezifisch)
+model Drill {
+  id          String          @id @default(cuid())
+  title       String
+  category    DrillCategory
+  difficulty  DrillDifficulty
+  situation   String // Kurzbeschreibung: wann/wofür dieser Drill
+  setup       String          @db.Text
+  execution   String          @db.Text
+  coachingCue String          @db.Text
+  reps        String
+  focusTags   String[]
+  videoQuery  String // Suchbegriff für Video-Link (kein fest verlinktes Video)
+  createdAt   DateTime        @default(now())
+
+  @@index([category])
+}
