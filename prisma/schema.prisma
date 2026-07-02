@@ -13,10 +13,17 @@ model User {
   name         String?
   createdAt    DateTime @default(now())
 
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  recoveryCodeHash String?
+
   profile       PlayerProfile?
   trainingLogs  TrainingSession[]
   matches       Match[]
   conversations CoachConversation[]
+  drillLogs     DrillLog[]
+  coachUsages   CoachMessageUsage[]
 }
 
 model PlayerProfile {
@@ -139,5 +146,32 @@ model Drill {
   videoQuery  String // Suchbegriff für Video-Link (kein fest verlinktes Video)
   createdAt   DateTime        @default(now())
 
+  logs DrillLog[]
+
   @@index([category])
+}
+
+model DrillLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  drillId     String
+  drill       Drill    @relation(fields: [drillId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now())
+  notes       String?
+
+  @@index([userId, drillId])
+  @@index([userId, completedAt])
+}
+
+// Zählt KI-Coach-Nachrichten pro Nutzer und Tag für ein einfaches Tages-Limit
+model CoachMessageUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       DateTime // auf Tagesbeginn normalisiert (00:00 UTC)
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, day])
 }

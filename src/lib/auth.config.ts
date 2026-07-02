@@ -23,7 +23,8 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isAuthPage =
         request.nextUrl.pathname.startsWith("/login") ||
-        request.nextUrl.pathname.startsWith("/register");
+        request.nextUrl.pathname.startsWith("/register") ||
+        request.nextUrl.pathname.startsWith("/forgot-password");
 
       if (isAuthPage) {
         return isLoggedIn ? Response.redirect(new URL("/dashboard", request.nextUrl)) : true;

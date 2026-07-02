@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { registerUser } from "@/actions/auth";
+import { resetPasswordWithRecoveryCode } from "@/actions/forgot-password";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,11 +15,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function RegisterPage() {
-  const [state, formAction, isPending] = useActionState(registerUser, {});
+export default function ForgotPasswordPage() {
+  const [state, formAction, isPending] = useActionState(resetPasswordWithRecoveryCode, {});
   const [copied, setCopied] = useState(false);
 
-  if (state.success && state.recoveryCode) {
+  if (state.success && state.newRecoveryCode) {
     return (
       <div
         className="flex min-h-screen flex-col items-center justify-center gap-6 p-4"
@@ -31,35 +31,29 @@ export default function RegisterPage() {
         <BrandMark />
         <Card className="w-full max-w-sm shadow-sm">
           <CardHeader>
-            <CardTitle>Konto erstellt</CardTitle>
+            <CardTitle>Passwort geändert</CardTitle>
             <CardDescription>
-              Speichere diesen Recovery-Code jetzt sicher — er wird nur einmal
-              angezeigt und ist der einzige Weg, dein Passwort zurückzusetzen.
+              Dein neuer Recovery-Code — speichere ihn jetzt sicher, der alte Code
+              ist ab sofort ungültig.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="rounded-md border bg-muted p-4 text-center font-mono text-lg tracking-wider">
-              {state.recoveryCode}
+              {state.newRecoveryCode}
             </div>
             <Button
               type="button"
               variant="outline"
               onClick={async () => {
-                await navigator.clipboard.writeText(state.recoveryCode!);
+                await navigator.clipboard.writeText(state.newRecoveryCode!);
                 setCopied(true);
               }}
             >
               {copied ? "Kopiert!" : "Code kopieren"}
             </Button>
-            {copied ? (
-              <Button asChild className="w-full">
-                <Link href="/login">Weiter zum Login</Link>
-              </Button>
-            ) : (
-              <Button type="button" className="w-full" disabled>
-                Erst Code kopieren, um fortzufahren
-              </Button>
-            )}
+            <Button asChild className="w-full">
+              <Link href="/login">Zum Login</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -77,43 +71,46 @@ export default function RegisterPage() {
       <BrandMark />
       <Card className="w-full max-w-sm shadow-sm">
         <CardHeader>
-          <CardTitle>Konto erstellen</CardTitle>
+          <CardTitle>Passwort zurücksetzen</CardTitle>
           <CardDescription>
-            Richte dein persönliches Tennis-Coach-Konto ein.
+            Gib deine E-Mail, deinen Recovery-Code und ein neues Passwort ein.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" type="text" required autoComplete="name" />
-            </div>
-            <div className="flex flex-col gap-2">
               <Label htmlFor="email">E-Mail</Label>
               <Input id="email" name="email" type="email" required autoComplete="email" />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Passwort</Label>
+              <Label htmlFor="recoveryCode">Recovery-Code</Label>
               <Input
-                id="password"
-                name="password"
+                id="recoveryCode"
+                name="recoveryCode"
+                placeholder="XXXX-XXXX-XXXX"
+                required
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="newPassword">Neues Passwort</Label>
+              <Input
+                id="newPassword"
+                name="newPassword"
                 type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"
               />
             </div>
-            {state.error && (
-              <p className="text-sm text-destructive">{state.error}</p>
-            )}
+            {state.error && <p className="text-sm text-destructive">{state.error}</p>}
             <Button type="submit" disabled={isPending} className="w-full">
-              {isPending ? "Wird erstellt..." : "Registrieren"}
+              {isPending ? "Wird gespeichert..." : "Passwort setzen"}
             </Button>
           </form>
           <p className="mt-4 text-sm text-muted-foreground">
-            Bereits ein Konto?{" "}
             <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
-              Anmelden
+              Zurück zum Login
             </Link>
           </p>
         </CardContent>

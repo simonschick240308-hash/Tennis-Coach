@@ -1,10 +1,42 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { anthropic, COACH_MODEL, COACH_SYSTEM_INSTRUCTIONS } from "@/lib/anthropic";
 import { buildCoachContext } from "@/lib/coach-context";
+import { logError } from "@/lib/log-error";
+import {
+  DAILY_COACH_MESSAGE_LIMIT,
+  checkCoachMessageLimit,
+  incrementCoachMessageUsage,
+} from "@/lib/coach-usage";
+
+function sseStream(events: Array<{ event: string; data: unknown }>) {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    start(controller) {
+      for (const { event, data } of events) {
+        controller.enqueue(
+          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+        );
+      }
+      controller.close();
+    },
+  });
+}
 
 export async function POST(req: NextRequest) {
+  try {
+    return await handlePost(req);
+  } catch (error) {
+    logError("coach-chat-request", error);
+    return NextResponse.json(
+      { error: "Ein unerwarteter Fehler ist aufgetreten." },
+      { status: 500 },
+    );
+  }
+}
+
+async function handlePost(req: NextRequest) {
   const session = await auth();
   if (!session?.user) {
     return new Response("Unauthorized", { status: 401 });
@@ -17,6 +49,26 @@ export async function POST(req: NextRequest) {
 
   if (!message) {
     return new Response("Nachricht darf nicht leer sein", { status: 400 });
+  }
+
+  const usage = await checkCoachMessageLimit(session.user.id);
+  if (!usage.allowed) {
+    const stream = sseStream([
+      {
+        event: "error",
+        data: {
+          message: `Du hast das Tageslimit von ${DAILY_COACH_MESSAGE_LIMIT} Nachrichten an den KI-Coach erreicht. Versuche es morgen wieder.`,
+        },
+      },
+      { event: "done", data: {} },
+    ]);
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
   }
 
   let conversation = conversationId
@@ -39,6 +91,7 @@ export async function POST(req: NextRequest) {
   await prisma.chatMessage.create({
     data: { conversationId: conversation.id, role: "user", content: message },
   });
+  await incrementCoachMessageUsage(session.user.id);
 
   const [history, context] = await Promise.all([
     prisma.chatMessage.findMany({
@@ -87,7 +140,10 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (error) {
-        console.error("Coach chat error:", error);
+        logError("coach-chat-stream", error, {
+          userId: session.user.id,
+          conversationId: conversationId_,
+        });
         send("error", {
           message:
             "Der KI-Coach konnte gerade nicht antworten. Bitte versuche es später erneut.",

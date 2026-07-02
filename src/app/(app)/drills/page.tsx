@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { drillCategoryLabels, drillDifficultyLabels } from "@/lib/labels";
+import { matchDrillCategoriesFromText } from "@/lib/drill-matching";
 import type { DrillCategory } from "@prisma/client";
 
 const categories = Object.keys(drillCategoryLabels) as DrillCategory[];
@@ -25,6 +27,13 @@ export default async function DrillsPage({
       ? (category as DrillCategory)
       : undefined;
 
+  const session = await auth();
+  const profile = await prisma.playerProfile.findUnique({
+    where: { userId: session!.user.id },
+    select: { weaknesses: true },
+  });
+  const recommendedCategories = matchDrillCategoriesFromText(profile?.weaknesses);
+
   const drills = await prisma.drill.findMany({
     where: activeCategory ? { category: activeCategory } : undefined,
     orderBy: [{ category: "asc" }, { title: "asc" }],
@@ -39,6 +48,13 @@ export default async function DrillsPage({
           taktischen Trainingsprinzipien von Patrick Mouratoglou.
         </p>
       </div>
+
+      {recommendedCategories.length > 0 && (
+        <p className="rounded-md border border-primary/40 bg-accent px-4 py-2 text-sm text-accent-foreground">
+          Drills mit <span className="font-medium">★ Empfohlen</span> passen zu den
+          Schwächen aus deinem Profil.
+        </p>
+      )}
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         <Link
@@ -69,26 +85,37 @@ export default async function DrillsPage({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {drills.map((drill) => (
-          <Link key={drill.id} href={`/drills/${drill.id}`}>
-            <Card className="h-full transition-shadow hover:shadow-md">
-              <CardHeader className="gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <Badge variant="secondary">{drillCategoryLabels[drill.category]}</Badge>
-                  <Badge variant={difficultyBadgeVariant[drill.difficulty]}>
-                    {drillDifficultyLabels[drill.difficulty]}
-                  </Badge>
-                </div>
-                <CardTitle className="text-base">{drill.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="line-clamp-3 text-sm text-muted-foreground">
-                  {drill.situation}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+        {drills.map((drill) => {
+          const isRecommended = recommendedCategories.includes(drill.category);
+          return (
+            <Link key={drill.id} href={`/drills/${drill.id}`}>
+              <Card
+                className={cn(
+                  "h-full transition-shadow hover:shadow-md",
+                  isRecommended && "ring-1 ring-primary",
+                )}
+              >
+                <CardHeader className="gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge variant="secondary">{drillCategoryLabels[drill.category]}</Badge>
+                    <Badge variant={difficultyBadgeVariant[drill.difficulty]}>
+                      {drillDifficultyLabels[drill.difficulty]}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-base">
+                    {isRecommended && <span className="text-primary">★ </span>}
+                    {drill.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="line-clamp-3 text-sm text-muted-foreground">
+                    {drill.situation}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
