@@ -24,12 +24,14 @@ function toDateInputValue(date: Date) {
 export function TrainingForm({
   action,
   defaultValues,
+  defaultFocusAreas,
 }: {
   action: (
     prevState: TrainingFormState,
     formData: FormData,
   ) => Promise<TrainingFormState>;
   defaultValues?: TrainingSession;
+  defaultFocusAreas?: string;
 }) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(action, {});
@@ -93,7 +95,7 @@ export function TrainingForm({
           id="focusAreas"
           name="focusAreas"
           placeholder="z.B. Aufschlag, Rückhand, Footwork"
-          defaultValue={defaultValues?.focusAreas.join(", ") ?? ""}
+          defaultValue={defaultValues?.focusAreas.join(", ") ?? defaultFocusAreas ?? ""}
         />
       </div>
       <div className="flex flex-col gap-2">

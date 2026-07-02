@@ -7,6 +7,7 @@ import { registerUser } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BrandMark } from "@/components/brand-mark";
 import {
   Card,
   CardContent,
@@ -26,8 +27,15 @@ export default function RegisterPage() {
   }, [state.success, router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-sm">
+    <div
+      className="flex min-h-screen flex-col items-center justify-center gap-6 p-4"
+      style={{
+        background:
+          "radial-gradient(ellipse 80% 60% at 50% -10%, color-mix(in oklab, var(--primary) 12%, transparent), var(--background))",
+      }}
+    >
+      <BrandMark />
+      <Card className="w-full max-w-sm shadow-sm">
         <CardHeader>
           <CardTitle>Konto erstellen</CardTitle>
           <CardDescription>
@@ -64,7 +72,7 @@ export default function RegisterPage() {
           </form>
           <p className="mt-4 text-sm text-muted-foreground">
             Bereits ein Konto?{" "}
-            <Link href="/login" className="underline underline-offset-4">
+            <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
               Anmelden
             </Link>
           </p>
