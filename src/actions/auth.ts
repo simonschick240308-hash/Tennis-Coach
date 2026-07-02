@@ -3,10 +3,12 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations";
+import { generateRecoveryCode, hashRecoveryCode } from "@/lib/recovery-code";
 
 export type RegisterState = {
   error?: string;
   success?: boolean;
+  recoveryCode?: string;
 };
 
 export async function registerUser(
@@ -31,10 +33,12 @@ export async function registerUser(
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const recoveryCode = generateRecoveryCode();
+  const recoveryCodeHash = await hashRecoveryCode(recoveryCode);
 
   await prisma.user.create({
-    data: { name, email, passwordHash },
+    data: { name, email, passwordHash, recoveryCodeHash },
   });
 
-  return { success: true };
+  return { success: true, recoveryCode };
 }

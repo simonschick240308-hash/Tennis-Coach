@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getDashboardStats } from "@/lib/dashboard";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { TrendChart } from "@/components/dashboard/trend-chart";
+import { TrainingVolumeChart } from "@/components/dashboard/training-volume-chart";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
       </div>
 
       <StatsCards stats={stats} />
+      <TrainingVolumeChart data={stats.trainingVolumeData} />
       <TrendChart data={stats.trendData} />
 
       {featuredDrill && (

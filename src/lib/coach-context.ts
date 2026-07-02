@@ -1,6 +1,7 @@
 import { subDays, format } from "date-fns";
 import { prisma } from "@/lib/prisma";
-import { skillLevelLabels, playingHandLabels } from "@/lib/labels";
+import { skillLevelLabels, playingHandLabels, drillCategoryLabels } from "@/lib/labels";
+import { matchDrillCategoriesFromText } from "@/lib/drill-matching";
 
 export async function buildCoachContext(userId: string): Promise<string> {
   const thirtyDaysAgo = subDays(new Date(), 30);
@@ -34,6 +35,27 @@ export async function buildCoachContext(userId: string): Promise<string> {
     if (profile.oetvProfileUrl) lines.push(`- ÖTV/OÖTV Profil-Link: ${profile.oetvProfileUrl}`);
   } else {
     lines.push("- Noch kein Profil ausgefüllt.");
+  }
+
+  const recommendedCategories = matchDrillCategoriesFromText(profile?.weaknesses);
+  if (recommendedCategories.length > 0) {
+    const recommendedDrills = await prisma.drill.findMany({
+      where: { category: { in: recommendedCategories } },
+      take: 5,
+      orderBy: { title: "asc" },
+    });
+    if (recommendedDrills.length > 0) {
+      lines.push("");
+      lines.push("## Passende Drills aus der Bibliothek (zu den Schwächen des Spielers)");
+      for (const drill of recommendedDrills) {
+        lines.push(
+          `- [${drillCategoryLabels[drill.category]}] ${drill.title}: ${drill.situation}`,
+        );
+      }
+      lines.push(
+        "Wenn es zur Frage passt, erwähne konkret einen dieser Drill-Titel als Empfehlung.",
+      );
+    }
   }
 
   lines.push("");
