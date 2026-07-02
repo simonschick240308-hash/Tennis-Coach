@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+
+  profile       PlayerProfile?
+  trainingLogs  TrainingSession[]
+  matches       Match[]
+  conversations CoachConversation[]
+}
+
+model PlayerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillLevel  String // "Beginner" | "Intermediate" | "Competitive"
+  playingHand String // "right" | "left"
+  goals       String?
+  weaknesses  String?
+  strengths   String?
+
+  // OeTV/OOeTV Verbandsdaten (manuelle Eingabe, kein Live-Sync)
+  oetvRanking    String?
+  itnValue       Float?
+  oetvProfileUrl String?
+
+  updatedAt DateTime @updatedAt
+}
+
+enum TrainingType {
+  DRILL
+  MATCH_PRACTICE
+  LESSON
+  FITNESS
+}
+
+model TrainingSession {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  durationMin Int
+  type        TrainingType
+  focusAreas  String[]
+  intensity   Int?
+  notes       String?
+  createdAt   DateTime     @default(now())
+
+  @@index([userId, date])
+}
+
+enum MatchResult {
+  WIN
+  LOSS
+}
+
+model Match {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           DateTime
+  opponentName   String
+  score          String
+  result         MatchResult
+  surface        String?
+  aces           Int?
+  doubleFaults   Int?
+  winners        Int?
+  unforcedErrors Int?
+  firstServePct  Float?
+  notes          String?
+  createdAt      DateTime    @default(now())
+
+  @@index([userId, date])
+}
+
+model CoachConversation {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model ChatMessage {
+  id             String            @id @default(cuid())
+  conversationId String
+  conversation   CoachConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String // "user" | "assistant"
+  content        String            @db.Text
+  createdAt      DateTime          @default(now())
+
+  @@index([conversationId, createdAt])
+}
