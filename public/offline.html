@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline – Tennis-Coach</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        background: #0b0f0d;
+        color: #f2f5f1;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem;
+      }
+      .ball {
+        font-size: 2.5rem;
+      }
+      p {
+        color: #9aa79a;
+        max-width: 24rem;
+      }
+      button {
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.5rem;
+        border: none;
+        background: #c8e51b;
+        color: #0b0f0d;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="ball">🎾</div>
+      <h1>Keine Verbindung</h1>
+      <p>
+        Tennis-Coach braucht eine Internetverbindung. Sobald du wieder online
+        bist, kannst du es erneut versuchen.
+      </p>
+      <button onclick="location.reload()">Erneut versuchen</button>
+    </div>
+  </body>
+</html>
