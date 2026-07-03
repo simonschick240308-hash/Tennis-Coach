@@ -18,12 +18,13 @@ model User {
 
   recoveryCodeHash String?
 
-  profile       PlayerProfile?
-  trainingLogs  TrainingSession[]
-  matches       Match[]
-  conversations CoachConversation[]
-  drillLogs     DrillLog[]
-  coachUsages   CoachMessageUsage[]
+  profile         PlayerProfile?
+  trainingLogs    TrainingSession[]
+  matches         Match[]
+  conversations   CoachConversation[]
+  drillLogs       DrillLog[]
+  coachUsages     CoachMessageUsage[]
+  whoopConnection WhoopConnection?
 }
 
 model PlayerProfile {
@@ -52,18 +53,34 @@ enum TrainingType {
 }
 
 model TrainingSession {
-  id          String       @id @default(cuid())
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date        DateTime
-  durationMin Int
-  type        TrainingType
-  focusAreas  String[]
-  intensity   Int?
-  notes       String?
-  createdAt   DateTime     @default(now())
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          DateTime
+  durationMin   Int
+  type          TrainingType
+  focusAreas    String[]
+  intensity     Int?
+  notes         String?
+  createdAt     DateTime     @default(now())
+  whoopWorkoutId String?     @unique // gesetzt bei automatischem Whoop-Import, verhindert Duplikate
 
   @@index([userId, date])
+}
+
+// Verbindung zu einem Whoop-Konto (OAuth2) für Recovery/Sleep/Strain-Daten
+// und automatischen Trainings-Import.
+model WhoopConnection {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String    @db.Text
+  refreshToken String    @db.Text
+  expiresAt    DateTime
+  whoopUserId  String?
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 enum MatchResult {

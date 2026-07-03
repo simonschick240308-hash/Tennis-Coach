@@ -5,10 +5,12 @@ import { getDashboardStats } from "@/lib/dashboard";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { TrainingVolumeChart } from "@/components/dashboard/training-volume-chart";
+import { WhoopStatusCard } from "@/components/dashboard/whoop-status-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { drillCategoryLabels } from "@/lib/labels";
+import { getWhoopSnapshot } from "@/lib/whoop";
 
 async function getFeaturedDrill() {
   const count = await prisma.drill.count();
@@ -20,9 +22,10 @@ async function getFeaturedDrill() {
 
 export default async function DashboardPage() {
   const session = await auth();
-  const [stats, featuredDrill] = await Promise.all([
+  const [stats, featuredDrill, whoopSnapshot] = await Promise.all([
     getDashboardStats(session!.user.id),
     getFeaturedDrill(),
+    getWhoopSnapshot(session!.user.id),
   ]);
 
   return (
@@ -37,6 +40,7 @@ export default async function DashboardPage() {
       </div>
 
       <StatsCards stats={stats} />
+      <WhoopStatusCard snapshot={whoopSnapshot} />
       <TrainingVolumeChart data={stats.trainingVolumeData} />
       <TrendChart data={stats.trendData} />
 
